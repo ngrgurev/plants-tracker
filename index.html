@@ -109,6 +109,10 @@
       margin: 10px 0 10px;
     }
 
+    .section-title.clickable {
+      cursor: pointer;
+    }
+
     .kb-section {
       margin-bottom: 10px;
       border-radius: var(--radius-md);
@@ -171,8 +175,9 @@
     }
 
     .calendar-header {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      grid-column-gap: 6px;
       align-items: center;
       margin-bottom: 6px;
       font-size: 13px;
@@ -267,7 +272,7 @@
     }
 
     .checklist {
-      max-height: 280px;           /* was 240px */
+      max-height: 320px;
       overflow-y: auto;
       border-radius: var(--radius-md);
       border: 1px solid var(--border);
@@ -278,10 +283,10 @@
     .checklist-item {
       border-radius: var(--radius-sm);
       border: 1px solid rgba(148, 163, 184, 0.25);
-      padding: 5px;                /* was 6px */
-      margin-bottom: 4px;          /* was 6px */
+      padding: 6px;
+      margin-bottom: 6px;
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr);
       gap: 6px;
       align-items: flex-start;
       background: rgba(15, 23, 42, 0.9);
@@ -295,10 +300,19 @@
     .checklist-item-header {
       font-size: 12px;
       font-weight: 500;
+      margin-bottom: 2px;
     }
 
     .checklist-item-meta {
       font-size: 11px;
+      color: var(--muted-soft);
+    }
+
+    .checklist-label-row {
+      margin-top: 4px;
+      display: flex;
+      gap: 4px;
+      font-size: 10px;
       color: var(--muted-soft);
     }
 
@@ -311,8 +325,8 @@
 
     .select-state,
     .select-label {
-      font-size: 10px;             /* was 11px */
-      padding: 2px 4px;            /* was 3px 5px */
+      font-size: 11px;
+      padding: 3px 6px;
       border-radius: var(--radius-sm);
       border: 1px solid rgba(148, 163, 184, 0.3);
       background: rgba(15, 23, 42, 0.95);
@@ -351,7 +365,7 @@
       background: rgba(15, 23, 42, 0.95);
       color: var(--text);
       resize: vertical;
-      min-height: 32px;            /* was 38px */
+      min-height: 40px;
     }
 
     .badge {
@@ -393,6 +407,10 @@
       background: rgba(15, 23, 42, 0.9);
       max-height: 260px;
       overflow-y: auto;
+    }
+
+    .day-log-list.collapsed {
+      display: none;
     }
 
     .day-log-item { border-bottom: 1px solid rgba(31, 41, 55, 0.9); }
@@ -450,6 +468,22 @@
       border-radius: 999px;
       padding: 2px 8px;
     }
+
+    .small-btn {
+      margin-top: 4px;
+      padding: 3px 10px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .small-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -466,43 +500,42 @@
 
       <div class="section-title">Knowledge base</div>
 
+      <!-- Today's weather -->
       <div class="kb-section">
-        <div class="kb-header" data-kb-toggle="kb-general">
-          <span>General playbook</span>
-          <small>schedule, roles, climate</small>
+        <div class="kb-header" data-kb-toggle="kb-weather">
+          <span>Today’s weather</span>
+          <small>Šibenik · live from API</small>
         </div>
-        <div class="kb-body" id="kb-general">
-          <p><strong>Owner:</strong> one person (plus backup) runs checks. Weekly in warm months, every 2 weeks in cool months.[web:32]</p>
-          <p><strong>Decision rule:</strong> check soil 3–4 cm deep; if dry for that plant’s profile, water. If still moist, mark “checked, skip”.[web:33][web:43]</p>
-          <p><strong>Climate:</strong> hot, bright summers; mild winters. Move plants back from glass in July–August and closer in winter.[web:34][web:37][web:44]</p>
-          <p><strong>Weekends:</strong> treated as “no office presence” but you can still log emergency waterings.</p>
+        <div class="kb-body" id="kb-weather">
+          <p id="weatherStatus" class="muted">Loading weather…</p>
+          <ul id="weatherDetails"></ul>
         </div>
       </div>
 
+      <!-- Care profiles (per plant) -->
       <div class="kb-section">
         <div class="kb-header" data-kb-toggle="kb-care">
           <span>Care profiles</span>
-          <small>who drinks how often</small>
+          <small>per plant</small>
         </div>
         <div class="kb-body" id="kb-care">
-          <p><strong>Thirsty (3–7 days summer, 7–14 winter):</strong> bamboo palm, peace lily, Chinese evergreen. Keep soil lightly moist, never soggy.[web:34][web:40]</p>
-          <p><strong>Moderate (7–10 days summer, 14–21 winter):</strong> spider plant, pothos, dracaena. Let top soil dry between waterings.[web:34][web:40]</p>
-          <p><strong>Drought tolerant (10–21+ days):</strong> snake plant, sometimes ivy. Let most of the root zone dry before watering.[web:34][web:40][web:43]</p>
-          <p><strong>Light:</strong> bright indirect near windows for palms/peace lily; medium for spider, pothos, dracaena; low–medium for snake plant and aglaonema.[web:34][web:44]</p>
+          <div id="careProfiles"></div>
         </div>
       </div>
 
+      <!-- Tips & tricks -->
       <div class="kb-section">
-        <div class="kb-header" data-kb-toggle="kb-tasks">
-          <span>Maintenance beyond water</span>
-          <small>pests, cleaning, rotation</small>
+        <div class="kb-header" data-kb-toggle="kb-tips">
+          <span>Tips & tricks</span>
+          <small>practical best practices</small>
         </div>
-        <div class="kb-body" id="kb-tasks">
+        <div class="kb-body" id="kb-tips">
           <ul>
-            <li>Quick pest scan on each round (webbing, sticky leaves, cottony blobs).[web:32][web:38]</li>
-            <li>Leaf wipe monthly for big leaves to remove dust and improve gas exchange.[web:34][web:43]</li>
-            <li>Fertilize lightly during growing season, about monthly; pause in winter.[web:34][web:40]</li>
-            <li>Rotate pots a quarter turn monthly to avoid leaning toward light.[web:32][web:41]</li>
+            <li>Group thirsty plants together so you can check them in one pass and spot stress faster.</li>
+            <li>When in doubt, under‑water snake plants and pothos; over‑watering kills them quicker than drought.</li>
+            <li>Stick to a small set of pot sizes and one base mix so repotting is predictable and fast.</li>
+            <li>If you move a plant, note it in that day’s checklist; it makes future troubleshooting actually useful.</li>
+            <li>If the same plant gets repeated “area of improvement” notes, change its location or profile, not just watering.</li>
           </ul>
         </div>
       </div>
@@ -515,6 +548,7 @@
         </div>
         <div class="hint" id="todayHint"></div>
       </div>
+      <button id="resetTodayBtn" type="button" class="small-btn">Reset to today</button>
     </div>
 
     <!-- Right: calendar + checklist + logs -->
@@ -524,7 +558,8 @@
       <div class="calendar-container">
         <div class="calendar-header">
           <button id="prevMonthBtn" type="button">&larr; Prev</button>
-          <div id="monthLabel"></div>
+          <div id="monthLabel" style="text-align:center;"></div>
+          <button id="todayBtn" type="button">Today</button>
           <button id="nextMonthBtn" type="button">Next &rarr;</button>
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
@@ -536,8 +571,10 @@
       </div>
       <div class="checklist" id="checklist"></div>
 
-      <div class="section-title" style="margin-top: 12px;">Daily log (grouped)</div>
-      <div class="day-log-list" id="dayLogList"></div>
+      <div class="section-title clickable" id="dayLogToggle" style="margin-top: 12px;">
+        Daily log (grouped)
+      </div>
+      <div class="day-log-list collapsed" id="dayLogList"></div>
     </div>
   </div>
 
@@ -582,11 +619,12 @@
       { id: "ivy-1", name: "English ivy (optional)", type: "ivy", profile: profile("moderate", 5, 16, "bright", "normal"), zoneId: "south_window_row", active: false }
     ];
 
+    // Summer: March–October (2–9), Winter: November–February (10,11,0,1)
     const defaultSettings = {
       timezone: "Europe/Zagreb",
       weekendDays: [0, 6],
-      summerMonths: [4,5,6,7,8],
-      winterMonths: [9,10,11,0,1,2]
+      summerMonths: [2,3,4,5,6,7,8,9],
+      winterMonths: [10,11,0,1]
     };
 
     let appState = null;
@@ -597,529 +635,3 @@
       const day = date.getDay();
       return defaultSettings.weekendDays.includes(day);
     }
-
-    function formatDateKey(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-
-    function parseDateKey(key) {
-      const [y, m, d] = key.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    function isSummer(monthIndex) {
-      return defaultSettings.summerMonths.includes(monthIndex);
-    }
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          const initial = {
-            version: 2,
-            plants: defaultPlants,
-            zones: defaultZones,
-            settings: defaultSettings,
-            log: {}
-          };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-          return initial;
-        }
-        const parsed = JSON.parse(raw);
-        if (!parsed.version || parsed.version < 2) {
-          parsed.version = 2;
-          if (!parsed.plants) parsed.plants = defaultPlants;
-          if (!parsed.zones) parsed.zones = defaultZones;
-          if (!parsed.settings) parsed.settings = defaultSettings;
-          if (!parsed.log) parsed.log = {};
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-        }
-        return parsed;
-      } catch (e) {
-        console.error("Failed to parse state", e);
-        const fallback = { version: 2, plants: defaultPlants, zones: defaultZones, settings: defaultSettings, log: {} };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
-        return fallback;
-      }
-    }
-
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-    }
-
-    function getDayRecord(dateKey) {
-      if (!appState.log[dateKey]) {
-        appState.log[dateKey] = {
-          date: dateKey,
-          plants: {},
-          tasks: { pestCheck: false, leafCleaning: false, fertilizing: false, rotation: false },
-          meta: {}
-        };
-      }
-      return appState.log[dateKey];
-    }
-
-    function calcDayStatus(dayRecord) {
-      const activePlants = appState.plants.filter(p => p.active);
-      if (!activePlants.length) return "none";
-
-      let any = false;
-      let fullyHandled = 0;
-
-      activePlants.forEach(plant => {
-        const rec = dayRecord.plants[plant.id];
-        if (!rec) return;
-        if (rec.state !== "unchecked") {
-          any = true;
-          fullyHandled += 1;
-        }
-      });
-
-      if (!any) return "none";
-      if (fullyHandled === activePlants.length) return "done";
-      return "partial";
-    }
-
-    // Strip [web:xx] citations from KB text
-    function stripCitations() {
-      document.querySelectorAll('.kb-body').forEach(el => {
-        el.innerHTML = el.innerHTML.replace(/\[web:\d+\]/g, '');
-      });
-    }
-
-    // Calendar
-
-    function renderCalendar() {
-      const grid = document.getElementById("calendarGrid");
-      const monthLabel = document.getElementById("monthLabel");
-      grid.innerHTML = "";
-
-      const monthName = new Date(currentYear, currentMonth, 1).toLocaleString("en", {
-        month: "long",
-        year: "numeric"
-      });
-      monthLabel.textContent = `${monthName} · ${isSummer(currentMonth) ? "summer mode" : "winter mode"}`;
-
-      const dowNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      dowNames.forEach(d => {
-        const el = document.createElement("div");
-        el.className = "dow";
-        el.textContent = d;
-        grid.appendChild(el);
-      });
-
-      const firstDay = new Date(currentYear, currentMonth, 1);
-      const lastDay = new Date(currentYear, currentMonth + 1, 0);
-      const firstDow = (firstDay.getDay() + 6) % 7;
-
-      for (let i = 0; i < firstDow; i++) {
-        const empty = document.createElement("div");
-        grid.appendChild(empty);
-      }
-
-      const today = new Date();
-      const todayKey = formatDateKey(today);
-
-      for (let d = 1; d <= lastDay.getDate(); d++) {
-        const date = new Date(currentYear, currentMonth, d);
-        const dateKey = formatDateKey(date);
-        const weekend = isWeekend(date);
-
-        const cell = document.createElement("div");
-        cell.className = "day";
-        if (weekend) cell.classList.add("weekend");
-        if (dateKey === todayKey) cell.classList.add("today");
-        if (dateKey === selectedDateKey) cell.classList.add("selected");
-
-        const dayRecord = appState.log[dateKey] || { plants: {} };
-        const status = calcDayStatus(dayRecord);
-
-        if (!weekend) {
-          if (status === "done") cell.classList.add("done");
-          else if (status === "partial") cell.classList.add("partial");
-        }
-
-        const span = document.createElement("span");
-        span.textContent = d;
-        cell.appendChild(span);
-
-        const label = document.createElement("div");
-        label.className = "day-label";
-        if (weekend) label.textContent = "off";
-        else if (status === "done") label.textContent = "done";
-        else if (status === "partial") label.textContent = "…";
-        cell.appendChild(label);
-
-        cell.addEventListener("click", () => {
-          selectedDateKey = dateKey;
-          renderCalendar();
-          renderChecklist();
-          renderDayLogList();
-          updateTodayStatus();
-        });
-
-        grid.appendChild(cell);
-      }
-    }
-
-    // Checklist
-
-    function renderChecklist() {
-      const checklist = document.getElementById("checklist");
-      const dateLabel = document.getElementById("checklistDateLabel");
-      const infoLabel = document.getElementById("checklistInfo");
-
-      if (!selectedDateKey) {
-        checklist.innerHTML = "<p class='muted'>Select a day in the calendar to start tracking.</p>";
-        dateLabel.textContent = "Checklist";
-        infoLabel.textContent = "";
-        return;
-      }
-
-      const dateObj = parseDateKey(selectedDateKey);
-      const weekend = isWeekend(dateObj);
-      const summer = isSummer(dateObj.getMonth());
-
-      dateLabel.textContent = `Checklist · ${dateObj.toLocaleDateString("en-GB")}`;
-      if (weekend) {
-        infoLabel.innerHTML = "Weekend: no watering expected, but you can log if you go in.";
-      } else if (summer) {
-        infoLabel.innerHTML = "<span class='hint-badge'>Summer mode</span> &nbsp; Soils dry faster near windows; still decide by moisture.";
-      } else {
-        infoLabel.innerHTML = "<span class='hint-badge'>Winter mode</span> &nbsp; Soils stay wet longer; expect more 'checked, skip'.";
-      }
-
-      checklist.innerHTML = "";
-
-      if (weekend) {
-        const note = document.createElement("p");
-        note.className = "muted";
-        note.textContent =
-          "Weekend day. The system still tracks checks and waterings, but you don't aim for a green day by default.";
-        checklist.appendChild(note);
-      }
-
-      const dayRecord = getDayRecord(selectedDateKey);
-      const activePlants = appState.plants.filter(p => p.active);
-
-      activePlants.forEach(plant => {
-        const rec = dayRecord.plants[plant.id] || {
-          state: "unchecked",
-          comment: "",
-          label: "",
-          updatedAt: null
-        };
-
-        const item = document.createElement("div");
-        item.className = "checklist-item";
-        if (rec.state === "watered" || rec.state === "checked_skip") item.classList.add("done");
-
-        const left = document.createElement("div");
-        const header = document.createElement("div");
-        header.className = "checklist-item-header";
-        header.textContent = plant.name;
-
-        const zone = appState.zones.find(z => z.id === plant.zoneId);
-        const metaLine = document.createElement("div");
-        metaLine.className = "checklist-item-meta";
-        const profile = plant.profile;
-        metaLine.textContent =
-          `${plant.type} · ${profile.waterNeed} watering · ` +
-          `${profile.light} light vs zone ${zone ? zone.light : "?"}`;
-
-        const controls = document.createElement("div");
-        controls.className = "checklist-item-controls";
-
-        const stateSelect = document.createElement("select");
-        stateSelect.className = "select-state";
-        [
-          { value: "unchecked", text: "Unchecked" },
-          { value: "checked_skip", text: "Checked (skip water)" },
-          { value: "watered", text: "Watered" }
-        ].forEach(opt => {
-          const o = document.createElement("option");
-          o.value = opt.value;
-          o.textContent = opt.text;
-          stateSelect.appendChild(o);
-        });
-        stateSelect.value = rec.state || "unchecked";
-
-        stateSelect.addEventListener("change", () => {
-          dayRecord.plants[plant.id] = {
-            state: stateSelect.value,
-            comment: comment.value.trim(),
-            label: labelSelect.value,
-            updatedAt: new Date().toISOString()
-          };
-          saveState();
-          renderCalendar();
-          renderDayLogList();
-          updateTodayStatus();
-          item.classList.toggle("done", stateSelect.value !== "unchecked");
-        });
-
-        controls.appendChild(stateSelect);
-
-        left.appendChild(header);
-        left.appendChild(metaLine);
-        left.appendChild(controls);
-
-        const right = document.createElement("div");
-        const comment = document.createElement("textarea");
-        comment.className = "checklist-comment";
-        comment.placeholder = "Notes (optional)";
-        comment.value = rec.comment || "";
-        comment.addEventListener("change", () => {
-          const existing = dayRecord.plants[plant.id] || { state: "unchecked" };
-          dayRecord.plants[plant.id] = {
-            ...existing,
-            comment: comment.value.trim(),
-            label: labelSelect.value,
-            updatedAt: new Date().toISOString()
-          };
-          saveState();
-          renderDayLogList();
-        });
-
-        const labelSelect = document.createElement("select");
-        labelSelect.className = "select-label";
-        labelOptions.forEach(opt => {
-          const o = document.createElement("option");
-          o.value = opt.value;
-          o.textContent = opt.text;
-          labelSelect.appendChild(o);
-        });
-        labelSelect.value = rec.label || "";
-
-        function updateLabelClass() {
-          labelSelect.classList.remove("important", "good", "area", "random");
-          if (labelSelect.value === "important") labelSelect.classList.add("important");
-          if (labelSelect.value === "good") labelSelect.classList.add("good");
-          if (labelSelect.value === "area") labelSelect.classList.add("area");
-          if (labelSelect.value === "random") labelSelect.classList.add("random");
-        }
-
-        updateLabelClass();
-
-        labelSelect.addEventListener("change", () => {
-          updateLabelClass();
-          const existing = dayRecord.plants[plant.id] || { state: "unchecked" };
-          dayRecord.plants[plant.id] = {
-            ...existing,
-            comment: comment.value.trim(),
-            label: labelSelect.value,
-            updatedAt: new Date().toISOString()
-          };
-          saveState();
-          renderDayLogList();
-        });
-
-        right.appendChild(comment);
-        right.appendChild(labelSelect);
-
-        item.appendChild(left);
-        item.appendChild(right);
-
-        checklist.appendChild(item);
-      });
-
-      saveState();
-    }
-
-    // Day log
-
-    function renderDayLogList() {
-      const container = document.getElementById("dayLogList");
-      const keys = Object.keys(appState.log).sort((a, b) => (a < b ? 1 : -1));
-      const activePlants = appState.plants.filter(p => p.active);
-
-      if (!keys.length) {
-        container.innerHTML =
-          "<div class='muted' style='padding:8px;'>No history yet. Start by logging today.</div>";
-        return;
-      }
-
-      container.innerHTML = "";
-
-      keys.forEach(dateKey => {
-        const dayRecord = appState.log[dateKey];
-        const dateObj = parseDateKey(dateKey);
-        const status = calcDayStatus(dayRecord);
-        const weekend = isWeekend(dateObj);
-
-        const item = document.createElement("div");
-        item.className = "day-log-item";
-
-        const header = document.createElement("div");
-        header.className = "day-log-header";
-
-        const left = document.createElement("div");
-        const span = document.createElement("span");
-        span.textContent = dateObj.toLocaleDateString("en-GB");
-        left.appendChild(span);
-
-        const statusBadge = document.createElement("span");
-        statusBadge.className = "tag";
-        if (weekend) {
-          statusBadge.classList.add("random");
-          statusBadge.textContent = "weekend";
-        } else if (status === "done") {
-          statusBadge.classList.add("good");
-          statusBadge.textContent = "done";
-        } else if (status === "partial") {
-          statusBadge.classList.add("area");
-          statusBadge.textContent = "partial";
-        } else {
-          statusBadge.classList.add("random");
-          statusBadge.textContent = "no checks";
-        }
-        left.appendChild(statusBadge);
-
-        const right = document.createElement("small");
-        let handled = 0;
-        activePlants.forEach(plant => {
-          const rec = dayRecord.plants[plant.id];
-          if (rec && rec.state !== "unchecked") handled += 1;
-        });
-        right.textContent = `${handled}/${activePlants.length} plants checked/watered`;
-
-        header.appendChild(left);
-        header.appendChild(right);
-
-        const body = document.createElement("div");
-        body.className = "day-log-body";
-
-        let hasLines = false;
-        activePlants.forEach(plant => {
-          const rec = dayRecord.plants[plant.id];
-          if (!rec || (!rec.comment && rec.state === "unchecked" && !rec.label)) return;
-
-          const p = document.createElement("p");
-          let stateText = rec.state === "watered" ? "✔ watered"
-                        : rec.state === "checked_skip" ? "○ checked (skip)"
-                        : "· unchecked";
-          let text = `${stateText} · ${plant.name}`;
-          if (rec.label) {
-            if (rec.label === "important") text += " [important]";
-            if (rec.label === "good") text += " [good to remember]";
-            if (rec.label === "area") text += " [area of improvement]";
-            if (rec.label === "random") text += " [random]";
-          }
-          if (rec.comment) text += ` – ${rec.comment}`;
-          p.textContent = text;
-          body.appendChild(p);
-          hasLines = true;
-        });
-
-        if (!hasLines) {
-          body.innerHTML = "<p class='muted'>No detailed notes for this day.</p>";
-        }
-
-        header.addEventListener("click", () => {
-          body.classList.toggle("open");
-        });
-
-        item.appendChild(header);
-        item.appendChild(body);
-        container.appendChild(item);
-      });
-    }
-
-    // Today badge
-
-    function updateTodayStatus() {
-      const todayStatus = document.getElementById("todayStatus");
-      const todayHint = document.getElementById("todayHint");
-      const today = new Date();
-      const todayKey = formatDateKey(today);
-      const weekend = isWeekend(today);
-      const dayRecord = appState.log[todayKey] || { plants: {} };
-      const status = calcDayStatus(dayRecord);
-
-      todayStatus.classList.remove("done", "partial", "none", "off");
-      let label;
-
-      if (weekend) {
-        todayStatus.classList.add("off");
-        label = "Weekend · no office watering expected";
-        todayHint.textContent = "";
-      } else if (status === "done") {
-        todayStatus.classList.add("done");
-        label = "Today · all plants handled";
-        todayHint.textContent = "Every plant is either watered or checked & skipped. Calendar is green.";
-      } else if (status === "partial") {
-        todayStatus.classList.add("partial");
-        label = "Today · some plants left";
-        todayHint.textContent = "Open today and finish the remaining checklist.";
-      } else {
-        todayStatus.classList.add("none");
-        label = "Today · nothing logged yet";
-        todayHint.textContent =
-          "Use the state selector: 'checked (skip)' if soil is still moist, 'watered' if you actually watered.";
-      }
-
-      todayStatus.innerHTML = `<span class="badge-dot"></span><span>${label}</span>`;
-    }
-
-    // KB toggles
-
-    function setupKnowledgeBase() {
-      document.querySelectorAll(".kb-header").forEach(h => {
-        const id = h.getAttribute("data-kb-toggle");
-        const body = document.getElementById(id);
-        if (!body) return;
-        h.addEventListener("click", () => {
-          body.classList.toggle("open");
-        });
-      });
-      const gen = document.getElementById("kb-general");
-      if (gen) gen.classList.add("open");
-    }
-
-    // Init
-
-    function init() {
-      appState = loadState();
-      const today = new Date();
-      currentYear = today.getFullYear();
-      currentMonth = today.getMonth();
-      selectedDateKey = formatDateKey(today);
-
-      stripCitations();
-
-      document.getElementById("prevMonthBtn").addEventListener("click", () => {
-        if (currentMonth === 0) {
-          currentMonth = 11;
-          currentYear -= 1;
-        } else currentMonth -= 1;
-        renderCalendar();
-        renderChecklist();
-        renderDayLogList();
-        updateTodayStatus();
-      });
-
-      document.getElementById("nextMonthBtn").addEventListener("click", () => {
-        if (currentMonth === 11) {
-          currentMonth = 0;
-          currentYear += 1;
-        } else currentMonth += 1;
-        renderCalendar();
-        renderChecklist();
-        renderDayLogList();
-        updateTodayStatus();
-      });
-
-      setupKnowledgeBase();
-      renderCalendar();
-      renderChecklist();
-      renderDayLogList();
-      updateTodayStatus();
-    }
-
-    init();
-  </script>
-</body>
-</html>
