@@ -267,7 +267,7 @@
     }
 
     .checklist {
-      max-height: 240px;
+      max-height: 280px;           /* was 240px */
       overflow-y: auto;
       border-radius: var(--radius-md);
       border: 1px solid var(--border);
@@ -278,8 +278,8 @@
     .checklist-item {
       border-radius: var(--radius-sm);
       border: 1px solid rgba(148, 163, 184, 0.25);
-      padding: 6px;
-      margin-bottom: 6px;
+      padding: 5px;                /* was 6px */
+      margin-bottom: 4px;          /* was 6px */
       display: grid;
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
       gap: 6px;
@@ -311,8 +311,8 @@
 
     .select-state,
     .select-label {
-      font-size: 11px;
-      padding: 3px 5px;
+      font-size: 10px;             /* was 11px */
+      padding: 2px 4px;            /* was 3px 5px */
       border-radius: var(--radius-sm);
       border: 1px solid rgba(148, 163, 184, 0.3);
       background: rgba(15, 23, 42, 0.95);
@@ -351,7 +351,7 @@
       background: rgba(15, 23, 42, 0.95);
       color: var(--text);
       resize: vertical;
-      min-height: 38px;
+      min-height: 32px;            /* was 38px */
     }
 
     .badge {
@@ -441,6 +441,15 @@
     .muted { color: var(--muted-soft); font-size: 11px; }
 
     .hint { font-size: 11px; color: var(--muted-soft); margin-top: 4px; }
+
+    .hint-badge {
+      font-size: 11px;
+      color: #fed7aa;
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.6);
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
   </style>
 </head>
 <body>
@@ -533,8 +542,6 @@
   </div>
 
   <script>
-    // --- Model & state ---
-
     const STORAGE_KEY = "plantCareState_v2";
 
     const labelOptions = [
@@ -577,8 +584,8 @@
 
     const defaultSettings = {
       timezone: "Europe/Zagreb",
-      weekendDays: [0, 6], // Sunday, Saturday
-      summerMonths: [4,5,6,7,8], // 0-based: May–Sep
+      weekendDays: [0, 6],
+      summerMonths: [4,5,6,7,8],
       winterMonths: [9,10,11,0,1,2]
     };
 
@@ -622,7 +629,6 @@
           return initial;
         }
         const parsed = JSON.parse(raw);
-        // simple migration hook
         if (!parsed.version || parsed.version < 2) {
           parsed.version = 2;
           if (!parsed.plants) parsed.plants = defaultPlants;
@@ -668,7 +674,6 @@
         if (!rec) return;
         if (rec.state !== "unchecked") {
           any = true;
-          // "checked_skip" and "watered" both count as handled
           fullyHandled += 1;
         }
       });
@@ -678,7 +683,14 @@
       return "partial";
     }
 
-    // --- Calendar ---
+    // Strip [web:xx] citations from KB text
+    function stripCitations() {
+      document.querySelectorAll('.kb-body').forEach(el => {
+        el.innerHTML = el.innerHTML.replace(/\[web:\d+\]/g, '');
+      });
+    }
+
+    // Calendar
 
     function renderCalendar() {
       const grid = document.getElementById("calendarGrid");
@@ -701,7 +713,7 @@
 
       const firstDay = new Date(currentYear, currentMonth, 1);
       const lastDay = new Date(currentYear, currentMonth + 1, 0);
-      const firstDow = (firstDay.getDay() + 6) % 7; // Monday=0
+      const firstDow = (firstDay.getDay() + 6) % 7;
 
       for (let i = 0; i < firstDow; i++) {
         const empty = document.createElement("div");
@@ -753,7 +765,7 @@
       }
     }
 
-    // --- Checklist ---
+    // Checklist
 
     function renderChecklist() {
       const checklist = document.getElementById("checklist");
@@ -772,11 +784,13 @@
       const summer = isSummer(dateObj.getMonth());
 
       dateLabel.textContent = `Checklist · ${dateObj.toLocaleDateString("en-GB")}`;
-      infoLabel.textContent = weekend
-        ? "Weekend: no watering expected, but you can log if you go in."
-        : summer
-        ? "Summer: soil dries faster near windows; still decide by moisture."
-        : "Winter: soil stays wet longer; expect more 'checked, skip'.";
+      if (weekend) {
+        infoLabel.innerHTML = "Weekend: no watering expected, but you can log if you go in.";
+      } else if (summer) {
+        infoLabel.innerHTML = "<span class='hint-badge'>Summer mode</span> &nbsp; Soils dry faster near windows; still decide by moisture.";
+      } else {
+        infoLabel.innerHTML = "<span class='hint-badge'>Winter mode</span> &nbsp; Soils stay wet longer; expect more 'checked, skip'.";
+      }
 
       checklist.innerHTML = "";
 
@@ -832,7 +846,6 @@
           stateSelect.appendChild(o);
         });
         stateSelect.value = rec.state || "unchecked";
-        stateSelect.disabled = false;
 
         stateSelect.addEventListener("change", () => {
           dayRecord.plants[plant.id] = {
@@ -857,7 +870,7 @@
         const right = document.createElement("div");
         const comment = document.createElement("textarea");
         comment.className = "checklist-comment";
-        comment.placeholder = "Notes: moved pot, pests, brown tips, etc.";
+        comment.placeholder = "Notes (optional)";
         comment.value = rec.comment || "";
         comment.addEventListener("change", () => {
           const existing = dayRecord.plants[plant.id] || { state: "unchecked" };
@@ -916,7 +929,7 @@
       saveState();
     }
 
-    // --- Day log ---
+    // Day log
 
     function renderDayLogList() {
       const container = document.getElementById("dayLogList");
@@ -1015,7 +1028,7 @@
       });
     }
 
-    // --- Today badge ---
+    // Today badge
 
     function updateTodayStatus() {
       const todayStatus = document.getElementById("todayStatus");
@@ -1051,7 +1064,7 @@
       todayStatus.innerHTML = `<span class="badge-dot"></span><span>${label}</span>`;
     }
 
-    // --- KB toggles ---
+    // KB toggles
 
     function setupKnowledgeBase() {
       document.querySelectorAll(".kb-header").forEach(h => {
@@ -1066,7 +1079,7 @@
       if (gen) gen.classList.add("open");
     }
 
-    // --- Init ---
+    // Init
 
     function init() {
       appState = loadState();
@@ -1074,6 +1087,8 @@
       currentYear = today.getFullYear();
       currentMonth = today.getMonth();
       selectedDateKey = formatDateKey(today);
+
+      stripCitations();
 
       document.getElementById("prevMonthBtn").addEventListener("click", () => {
         if (currentMonth === 0) {
@@ -1108,5 +1123,3 @@
   </script>
 </body>
 </html>
-
-
