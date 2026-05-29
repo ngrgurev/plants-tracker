@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Office Plant Care Tracker v2</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #0b1120;
+      --card-alt: #111827;
+      --border: #1f2937;
+      --accent: #4caf50;
+      --accent-soft: rgba(76, 175, 80, 0.14);
+      --accent-warn: #ff9800;
+      --accent-warn-soft: rgba(255, 152, 0, 0.12);
+      --accent-bad: #f44336;
+      --accent-bad-soft: rgba(244, 67, 54, 0.12);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --muted-soft: #6b7280;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1200px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: linear-gradient(145deg, var(--card), var(--card-alt));
+      border-radius: var(--radius-lg);
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: var(--muted-soft);
+    }
+
+    .pill.good {
+      border-color: rgba(34, 197, 94, 0.7);
+      color: #bbf7d0;
+      background: rgba(22, 163, 74, 0.08);
+    }
+
+    .pill.warn {
+      border-color: rgba(249, 115, 22, 0.7);
+      color: #fed7aa;
+      background: rgba(249, 115, 22, 0.06);
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #9ca3af;
+      margin: 10px 0 10px;
+    }
+
+    .kb-section {
+      margin-bottom: 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .kb-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .kb-header span { font-size: 13px; font-weight: 500; }
+    .kb-header small { font-size: 11px; color: var(--muted-soft); }
+
+    .kb-body {
+      padding: 8px 10px 10px;
+      background: rgba(15, 23, 42, 0.8);
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .kb-body.open { display: block; }
+
+    .kb-body p {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .kb-body ul {
+      margin: 4px 0 0 16px;
+      padding: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .kb-body li { margin-bottom: 3px; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    .row label { font-size: 12px; color: var(--muted); }
+
+    .calendar-container {
+      margin-top: 6px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      padding: 10px;
+      background: rgba(15, 23, 42, 0.86);
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .calendar-header button {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    .calendar-header button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      font-size: 11px;
+    }
+
+    .dow {
+      text-align: center;
+      color: var(--muted-soft);
+      margin-bottom: 2px;
+    }
+
+    .day {
+      height: 30px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .day span { z-index: 1; }
+
+    .day.weekend {
+      background: rgba(75, 85, 99, 0.25);
+      color: var(--muted-soft);
+    }
+
+    .day.today { border-color: var(--accent); }
+    .day.done {
+      background: var(--accent-soft);
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+
+    .day.partial {
+      background: var(--accent-warn-soft);
+      border-color: var(--accent-warn);
+      color: #fed7aa;
+    }
+
+    .day.selected { box-shadow: 0 0 0 1px var(--accent); }
+
+    .day-label {
+      position: absolute;
+      bottom: 2px;
+      right: 3px;
+      font-size: 8px;
+      color: var(--muted-soft);
+    }
+
+    .checklist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .checklist-header span {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .checklist-header small {
+      font-size: 11px;
+      color: var(--muted-soft);
+    }
+
+    .checklist {
+      max-height: 240px;
+      overflow-y: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 6px;
+    }
+
+    .checklist-item {
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 6px;
+      margin-bottom: 6px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
+      gap: 6px;
+      align-items: flex-start;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .checklist-item.done {
+      border-color: rgba(34, 197, 94, 0.8);
+      background: rgba(22, 163, 74, 0.12);
+    }
+
+    .checklist-item-header {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .checklist-item-meta {
+      font-size: 11px;
+      color: var(--muted-soft);
+    }
+
+    .checklist-item-controls {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .select-state,
+    .select-label {
+      font-size: 11px;
+      padding: 3px 5px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--muted-soft);
+    }
+
+    .select-label.important {
+      border-color: var(--accent-bad);
+      background: var(--accent-bad-soft);
+      color: #fecaca;
+    }
+
+    .select-label.good {
+      border-color: #22c55e;
+      background: var(--accent-soft);
+      color: #bbf7d0;
+    }
+
+    .select-label.area {
+      border-color: var(--accent-warn);
+      background: var(--accent-warn-soft);
+      color: #fed7aa;
+    }
+
+    .select-label.random {
+      border-color: var(--muted-soft);
+      color: var(--muted-soft);
+    }
+
+    .checklist-comment {
+      width: 100%;
+      font-size: 11px;
+      padding: 4px 5px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      resize: vertical;
+      min-height: 38px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 2px 8px;
+      font-size: 11px;
+      color: var(--muted-soft);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--muted-soft);
+    }
+
+    .badge.done .badge-dot { background: #22c55e; }
+    .badge.partial .badge-dot { background: var(--accent-warn); }
+    .badge.none .badge-dot { background: var(--muted-soft); }
+
+    .badge.off {
+      border-style: dashed;
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+
+    .badge.off .badge-dot {
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .day-log-list {
+      margin-top: 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .day-log-item { border-bottom: 1px solid rgba(31, 41, 55, 0.9); }
+
+    .day-log-header {
+      padding: 7px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .day-log-header span { font-weight: 500; }
+    .day-log-header small { color: var(--muted-soft); font-size: 11px; }
+
+    .day-log-header:hover { background: rgba(31, 41, 55, 0.9); }
+
+    .day-log-body {
+      padding: 6px 9px 8px;
+      display: none;
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.97);
+    }
+
+    .day-log-body.open { display: block; }
+
+    .day-log-body p { margin: 2px 0; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 10px;
+      margin-left: 4px;
+    }
+
+    .tag.good { border-color: #22c55e; color: #bbf7d0; }
+    .tag.bad { border-color: var(--accent-bad); color: #fecaca; }
+    .tag.area { border-color: var(--accent-warn); color: #fed7aa; }
+    .tag.random { border-color: var(--muted-soft); color: var(--muted-soft); }
+
+    .muted { color: var(--muted-soft); font-size: 11px; }
+
+    .hint { font-size: 11px; color: var(--muted-soft); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Left: knowledge + today status -->
+    <div class="panel">
+      <h1>Office Plant Care</h1>
+      <p class="subtitle">Šibenik open office · NASA plants · v2 tracking</p>
+
+      <div class="pill-row">
+        <div class="pill good">Goal: all plants either checked or watered on each working day</div>
+        <div class="pill warn">Sat/Sun: “no one in the office” by default</div>
+      </div>
+
+      <div class="section-title">Knowledge base</div>
+
+      <div class="kb-section">
+        <div class="kb-header" data-kb-toggle="kb-general">
+          <span>General playbook</span>
+          <small>schedule, roles, climate</small>
+        </div>
+        <div class="kb-body" id="kb-general">
+          <p><strong>Owner:</strong> one person (plus backup) runs checks. Weekly in warm months, every 2 weeks in cool months.[web:32]</p>
+          <p><strong>Decision rule:</strong> check soil 3–4 cm deep; if dry for that plant’s profile, water. If still moist, mark “checked, skip”.[web:33][web:43]</p>
+          <p><strong>Climate:</strong> hot, bright summers; mild winters. Move plants back from glass in July–August and closer in winter.[web:34][web:37][web:44]</p>
+          <p><strong>Weekends:</strong> treated as “no office presence” but you can still log emergency waterings.</p>
+        </div>
+      </div>
+
+      <div class="kb-section">
+        <div class="kb-header" data-kb-toggle="kb-care">
+          <span>Care profiles</span>
+          <small>who drinks how often</small>
+        </div>
+        <div class="kb-body" id="kb-care">
+          <p><strong>Thirsty (3–7 days summer, 7–14 winter):</strong> bamboo palm, peace lily, Chinese evergreen. Keep soil lightly moist, never soggy.[web:34][web:40]</p>
+          <p><strong>Moderate (7–10 days summer, 14–21 winter):</strong> spider plant, pothos, dracaena. Let top soil dry between waterings.[web:34][web:40]</p>
+          <p><strong>Drought tolerant (10–21+ days):</strong> snake plant, sometimes ivy. Let most of the root zone dry before watering.[web:34][web:40][web:43]</p>
+          <p><strong>Light:</strong> bright indirect near windows for palms/peace lily; medium for spider, pothos, dracaena; low–medium for snake plant and aglaonema.[web:34][web:44]</p>
+        </div>
+      </div>
+
+      <div class="kb-section">
+        <div class="kb-header" data-kb-toggle="kb-tasks">
+          <span>Maintenance beyond water</span>
+          <small>pests, cleaning, rotation</small>
+        </div>
+        <div class="kb-body" id="kb-tasks">
+          <ul>
+            <li>Quick pest scan on each round (webbing, sticky leaves, cottony blobs).[web:32][web:38]</li>
+            <li>Leaf wipe monthly for big leaves to remove dust and improve gas exchange.[web:34][web:43]</li>
+            <li>Fertilize lightly during growing season, about monthly; pause in winter.[web:34][web:40]</li>
+            <li>Rotate pots a quarter turn monthly to avoid leaning toward light.[web:32][web:41]</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-title">Today’s status</div>
+      <div class="row">
+        <div id="todayStatus" class="badge none">
+          <span class="badge-dot"></span>
+          <span>Loading…</span>
+        </div>
+        <div class="hint" id="todayHint"></div>
+      </div>
+    </div>
+
+    <!-- Right: calendar + checklist + logs -->
+    <div class="panel">
+      <div class="section-title">Calendar & checklist</div>
+
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <button id="prevMonthBtn" type="button">&larr; Prev</button>
+          <div id="monthLabel"></div>
+          <button id="nextMonthBtn" type="button">Next &rarr;</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="checklist-header">
+        <span id="checklistDateLabel">Checklist</span>
+        <small id="checklistInfo"></small>
+      </div>
+      <div class="checklist" id="checklist"></div>
+
+      <div class="section-title" style="margin-top: 12px;">Daily log (grouped)</div>
+      <div class="day-log-list" id="dayLogList"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- Model & state ---
+
+    const STORAGE_KEY = "plantCareState_v2";
+
+    const labelOptions = [
+      { value: "", text: "No label" },
+      { value: "important", text: "Important" },
+      { value: "good", text: "Good to remember" },
+      { value: "area", text: "Area of improvement" },
+      { value: "random", text: "Random" }
+    ];
+
+    const defaultZones = [
+      { id: "south_window_row", name: "South/West window row", light: "bright", acExposure: false, drafty: false },
+      { id: "center_desks", name: "Center desks", light: "medium", acExposure: true, drafty: false },
+      { id: "back_wall", name: "Back wall / darker", light: "low", acExposure: false, drafty: false },
+      { id: "meeting_corner", name: "Meeting corner", light: "medium", acExposure: false, drafty: false }
+    ];
+
+    function profile(waterNeed, minInterval, maxInterval, light, humidity) {
+      return { waterNeed, minIntervalDays: minInterval, maxIntervalDays: maxInterval, light, humidity };
+    }
+
+    const defaultPlants = [
+      { id: "bamboo-palm-1", name: "Bamboo palm #1", type: "bamboo_palm", profile: profile("thirsty", 3, 10, "bright", "high"), zoneId: "south_window_row", active: true },
+      { id: "bamboo-palm-2", name: "Bamboo palm #2", type: "bamboo_palm", profile: profile("thirsty", 3, 10, "bright", "high"), zoneId: "center_desks", active: true },
+      { id: "dracaena-1", name: "Red-edged dracaena #1", type: "dracaena", profile: profile("moderate", 7, 18, "bright", "normal"), zoneId: "center_desks", active: true },
+      { id: "dracaena-2", name: "Red-edged dracaena #2", type: "dracaena", profile: profile("moderate", 7, 18, "bright", "normal"), zoneId: "meeting_corner", active: true },
+      { id: "snake-1", name: "Snake plant #1", type: "snake", profile: profile("drought_tolerant", 10, 30, "medium", "normal"), zoneId: "back_wall", active: true },
+      { id: "snake-2", name: "Snake plant #2", type: "snake", profile: profile("drought_tolerant", 10, 30, "medium", "normal"), zoneId: "center_desks", active: true },
+      { id: "snake-3", name: "Snake plant #3", type: "snake", profile: profile("drought_tolerant", 10, 30, "medium", "normal"), zoneId: "center_desks", active: true },
+      { id: "spider-1", name: "Spider plant #1", type: "spider", profile: profile("moderate", 7, 18, "bright", "normal"), zoneId: "meeting_corner", active: true },
+      { id: "spider-2", name: "Spider plant #2", type: "spider", profile: profile("moderate", 7, 18, "bright", "normal"), zoneId: "south_window_row", active: true },
+      { id: "spider-3", name: "Spider plant #3", type: "spider", profile: profile("moderate", 7, 18, "bright", "normal"), zoneId: "back_wall", active: true },
+      { id: "pothos-1", name: "Money plant / pothos #1", type: "pothos", profile: profile("moderate", 7, 18, "medium", "normal"), zoneId: "south_window_row", active: true },
+      { id: "pothos-2", name: "Money plant / pothos #2", type: "pothos", profile: profile("moderate", 7, 18, "medium", "normal"), zoneId: "center_desks", active: true },
+      { id: "peace-1", name: "Peace lily #1", type: "peace", profile: profile("thirsty", 3, 10, "medium", "high"), zoneId: "meeting_corner", active: true },
+      { id: "peace-2", name: "Peace lily #2 (optional)", type: "peace", profile: profile("thirsty", 3, 10, "medium", "high"), zoneId: "center_desks", active: false },
+      { id: "aglaonema-1", name: "Chinese evergreen (optional)", type: "aglaonema", profile: profile("thirsty", 4, 14, "low", "high"), zoneId: "back_wall", active: false },
+      { id: "ivy-1", name: "English ivy (optional)", type: "ivy", profile: profile("moderate", 5, 16, "bright", "normal"), zoneId: "south_window_row", active: false }
+    ];
+
+    const defaultSettings = {
+      timezone: "Europe/Zagreb",
+      weekendDays: [0, 6], // Sunday, Saturday
+      summerMonths: [4,5,6,7,8], // 0-based: May–Sep
+      winterMonths: [9,10,11,0,1,2]
+    };
+
+    let appState = null;
+    let currentYear, currentMonth;
+    let selectedDateKey = null;
+
+    function isWeekend(date) {
+      const day = date.getDay();
+      return defaultSettings.weekendDays.includes(day);
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseDateKey(key) {
+      const [y, m, d] = key.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function isSummer(monthIndex) {
+      return defaultSettings.summerMonths.includes(monthIndex);
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          const initial = {
+            version: 2,
+            plants: defaultPlants,
+            zones: defaultZones,
+            settings: defaultSettings,
+            log: {}
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+          return initial;
+        }
+        const parsed = JSON.parse(raw);
+        // simple migration hook
+        if (!parsed.version || parsed.version < 2) {
+          parsed.version = 2;
+          if (!parsed.plants) parsed.plants = defaultPlants;
+          if (!parsed.zones) parsed.zones = defaultZones;
+          if (!parsed.settings) parsed.settings = defaultSettings;
+          if (!parsed.log) parsed.log = {};
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+        return parsed;
+      } catch (e) {
+        console.error("Failed to parse state", e);
+        const fallback = { version: 2, plants: defaultPlants, zones: defaultZones, settings: defaultSettings, log: {} };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
+        return fallback;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    }
+
+    function getDayRecord(dateKey) {
+      if (!appState.log[dateKey]) {
+        appState.log[dateKey] = {
+          date: dateKey,
+          plants: {},
+          tasks: { pestCheck: false, leafCleaning: false, fertilizing: false, rotation: false },
+          meta: {}
+        };
+      }
+      return appState.log[dateKey];
+    }
+
+    function calcDayStatus(dayRecord) {
+      const activePlants = appState.plants.filter(p => p.active);
+      if (!activePlants.length) return "none";
+
+      let any = false;
+      let fullyHandled = 0;
+
+      activePlants.forEach(plant => {
+        const rec = dayRecord.plants[plant.id];
+        if (!rec) return;
+        if (rec.state !== "unchecked") {
+          any = true;
+          // "checked_skip" and "watered" both count as handled
+          fullyHandled += 1;
+        }
+      });
+
+      if (!any) return "none";
+      if (fullyHandled === activePlants.length) return "done";
+      return "partial";
+    }
+
+    // --- Calendar ---
+
+    function renderCalendar() {
+      const grid = document.getElementById("calendarGrid");
+      const monthLabel = document.getElementById("monthLabel");
+      grid.innerHTML = "";
+
+      const monthName = new Date(currentYear, currentMonth, 1).toLocaleString("en", {
+        month: "long",
+        year: "numeric"
+      });
+      monthLabel.textContent = `${monthName} · ${isSummer(currentMonth) ? "summer mode" : "winter mode"}`;
+
+      const dowNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      dowNames.forEach(d => {
+        const el = document.createElement("div");
+        el.className = "dow";
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const firstDow = (firstDay.getDay() + 6) % 7; // Monday=0
+
+      for (let i = 0; i < firstDow; i++) {
+        const empty = document.createElement("div");
+        grid.appendChild(empty);
+      }
+
+      const today = new Date();
+      const todayKey = formatDateKey(today);
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(currentYear, currentMonth, d);
+        const dateKey = formatDateKey(date);
+        const weekend = isWeekend(date);
+
+        const cell = document.createElement("div");
+        cell.className = "day";
+        if (weekend) cell.classList.add("weekend");
+        if (dateKey === todayKey) cell.classList.add("today");
+        if (dateKey === selectedDateKey) cell.classList.add("selected");
+
+        const dayRecord = appState.log[dateKey] || { plants: {} };
+        const status = calcDayStatus(dayRecord);
+
+        if (!weekend) {
+          if (status === "done") cell.classList.add("done");
+          else if (status === "partial") cell.classList.add("partial");
+        }
+
+        const span = document.createElement("span");
+        span.textContent = d;
+        cell.appendChild(span);
+
+        const label = document.createElement("div");
+        label.className = "day-label";
+        if (weekend) label.textContent = "off";
+        else if (status === "done") label.textContent = "done";
+        else if (status === "partial") label.textContent = "…";
+        cell.appendChild(label);
+
+        cell.addEventListener("click", () => {
+          selectedDateKey = dateKey;
+          renderCalendar();
+          renderChecklist();
+          renderDayLogList();
+          updateTodayStatus();
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+
+    // --- Checklist ---
+
+    function renderChecklist() {
+      const checklist = document.getElementById("checklist");
+      const dateLabel = document.getElementById("checklistDateLabel");
+      const infoLabel = document.getElementById("checklistInfo");
+
+      if (!selectedDateKey) {
+        checklist.innerHTML = "<p class='muted'>Select a day in the calendar to start tracking.</p>";
+        dateLabel.textContent = "Checklist";
+        infoLabel.textContent = "";
+        return;
+      }
+
+      const dateObj = parseDateKey(selectedDateKey);
+      const weekend = isWeekend(dateObj);
+      const summer = isSummer(dateObj.getMonth());
+
+      dateLabel.textContent = `Checklist · ${dateObj.toLocaleDateString("en-GB")}`;
+      infoLabel.textContent = weekend
+        ? "Weekend: no watering expected, but you can log if you go in."
+        : summer
+        ? "Summer: soil dries faster near windows; still decide by moisture."
+        : "Winter: soil stays wet longer; expect more 'checked, skip'.";
+
+      checklist.innerHTML = "";
+
+      if (weekend) {
+        const note = document.createElement("p");
+        note.className = "muted";
+        note.textContent =
+          "Weekend day. The system still tracks checks and waterings, but you don't aim for a green day by default.";
+        checklist.appendChild(note);
+      }
+
+      const dayRecord = getDayRecord(selectedDateKey);
+      const activePlants = appState.plants.filter(p => p.active);
+
+      activePlants.forEach(plant => {
+        const rec = dayRecord.plants[plant.id] || {
+          state: "unchecked",
+          comment: "",
+          label: "",
+          updatedAt: null
+        };
+
+        const item = document.createElement("div");
+        item.className = "checklist-item";
+        if (rec.state === "watered" || rec.state === "checked_skip") item.classList.add("done");
+
+        const left = document.createElement("div");
+        const header = document.createElement("div");
+        header.className = "checklist-item-header";
+        header.textContent = plant.name;
+
+        const zone = appState.zones.find(z => z.id === plant.zoneId);
+        const metaLine = document.createElement("div");
+        metaLine.className = "checklist-item-meta";
+        const profile = plant.profile;
+        metaLine.textContent =
+          `${plant.type} · ${profile.waterNeed} watering · ` +
+          `${profile.light} light vs zone ${zone ? zone.light : "?"}`;
+
+        const controls = document.createElement("div");
+        controls.className = "checklist-item-controls";
+
+        const stateSelect = document.createElement("select");
+        stateSelect.className = "select-state";
+        [
+          { value: "unchecked", text: "Unchecked" },
+          { value: "checked_skip", text: "Checked (skip water)" },
+          { value: "watered", text: "Watered" }
+        ].forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt.value;
+          o.textContent = opt.text;
+          stateSelect.appendChild(o);
+        });
+        stateSelect.value = rec.state || "unchecked";
+        stateSelect.disabled = false;
+
+        stateSelect.addEventListener("change", () => {
+          dayRecord.plants[plant.id] = {
+            state: stateSelect.value,
+            comment: comment.value.trim(),
+            label: labelSelect.value,
+            updatedAt: new Date().toISOString()
+          };
+          saveState();
+          renderCalendar();
+          renderDayLogList();
+          updateTodayStatus();
+          item.classList.toggle("done", stateSelect.value !== "unchecked");
+        });
+
+        controls.appendChild(stateSelect);
+
+        left.appendChild(header);
+        left.appendChild(metaLine);
+        left.appendChild(controls);
+
+        const right = document.createElement("div");
+        const comment = document.createElement("textarea");
+        comment.className = "checklist-comment";
+        comment.placeholder = "Notes: moved pot, pests, brown tips, etc.";
+        comment.value = rec.comment || "";
+        comment.addEventListener("change", () => {
+          const existing = dayRecord.plants[plant.id] || { state: "unchecked" };
+          dayRecord.plants[plant.id] = {
+            ...existing,
+            comment: comment.value.trim(),
+            label: labelSelect.value,
+            updatedAt: new Date().toISOString()
+          };
+          saveState();
+          renderDayLogList();
+        });
+
+        const labelSelect = document.createElement("select");
+        labelSelect.className = "select-label";
+        labelOptions.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt.value;
+          o.textContent = opt.text;
+          labelSelect.appendChild(o);
+        });
+        labelSelect.value = rec.label || "";
+
+        function updateLabelClass() {
+          labelSelect.classList.remove("important", "good", "area", "random");
+          if (labelSelect.value === "important") labelSelect.classList.add("important");
+          if (labelSelect.value === "good") labelSelect.classList.add("good");
+          if (labelSelect.value === "area") labelSelect.classList.add("area");
+          if (labelSelect.value === "random") labelSelect.classList.add("random");
+        }
+
+        updateLabelClass();
+
+        labelSelect.addEventListener("change", () => {
+          updateLabelClass();
+          const existing = dayRecord.plants[plant.id] || { state: "unchecked" };
+          dayRecord.plants[plant.id] = {
+            ...existing,
+            comment: comment.value.trim(),
+            label: labelSelect.value,
+            updatedAt: new Date().toISOString()
+          };
+          saveState();
+          renderDayLogList();
+        });
+
+        right.appendChild(comment);
+        right.appendChild(labelSelect);
+
+        item.appendChild(left);
+        item.appendChild(right);
+
+        checklist.appendChild(item);
+      });
+
+      saveState();
+    }
+
+    // --- Day log ---
+
+    function renderDayLogList() {
+      const container = document.getElementById("dayLogList");
+      const keys = Object.keys(appState.log).sort((a, b) => (a < b ? 1 : -1));
+      const activePlants = appState.plants.filter(p => p.active);
+
+      if (!keys.length) {
+        container.innerHTML =
+          "<div class='muted' style='padding:8px;'>No history yet. Start by logging today.</div>";
+        return;
+      }
+
+      container.innerHTML = "";
+
+      keys.forEach(dateKey => {
+        const dayRecord = appState.log[dateKey];
+        const dateObj = parseDateKey(dateKey);
+        const status = calcDayStatus(dayRecord);
+        const weekend = isWeekend(dateObj);
+
+        const item = document.createElement("div");
+        item.className = "day-log-item";
+
+        const header = document.createElement("div");
+        header.className = "day-log-header";
+
+        const left = document.createElement("div");
+        const span = document.createElement("span");
+        span.textContent = dateObj.toLocaleDateString("en-GB");
+        left.appendChild(span);
+
+        const statusBadge = document.createElement("span");
+        statusBadge.className = "tag";
+        if (weekend) {
+          statusBadge.classList.add("random");
+          statusBadge.textContent = "weekend";
+        } else if (status === "done") {
+          statusBadge.classList.add("good");
+          statusBadge.textContent = "done";
+        } else if (status === "partial") {
+          statusBadge.classList.add("area");
+          statusBadge.textContent = "partial";
+        } else {
+          statusBadge.classList.add("random");
+          statusBadge.textContent = "no checks";
+        }
+        left.appendChild(statusBadge);
+
+        const right = document.createElement("small");
+        let handled = 0;
+        activePlants.forEach(plant => {
+          const rec = dayRecord.plants[plant.id];
+          if (rec && rec.state !== "unchecked") handled += 1;
+        });
+        right.textContent = `${handled}/${activePlants.length} plants checked/watered`;
+
+        header.appendChild(left);
+        header.appendChild(right);
+
+        const body = document.createElement("div");
+        body.className = "day-log-body";
+
+        let hasLines = false;
+        activePlants.forEach(plant => {
+          const rec = dayRecord.plants[plant.id];
+          if (!rec || (!rec.comment && rec.state === "unchecked" && !rec.label)) return;
+
+          const p = document.createElement("p");
+          let stateText = rec.state === "watered" ? "✔ watered"
+                        : rec.state === "checked_skip" ? "○ checked (skip)"
+                        : "· unchecked";
+          let text = `${stateText} · ${plant.name}`;
+          if (rec.label) {
+            if (rec.label === "important") text += " [important]";
+            if (rec.label === "good") text += " [good to remember]";
+            if (rec.label === "area") text += " [area of improvement]";
+            if (rec.label === "random") text += " [random]";
+          }
+          if (rec.comment) text += ` – ${rec.comment}`;
+          p.textContent = text;
+          body.appendChild(p);
+          hasLines = true;
+        });
+
+        if (!hasLines) {
+          body.innerHTML = "<p class='muted'>No detailed notes for this day.</p>";
+        }
+
+        header.addEventListener("click", () => {
+          body.classList.toggle("open");
+        });
+
+        item.appendChild(header);
+        item.appendChild(body);
+        container.appendChild(item);
+      });
+    }
+
+    // --- Today badge ---
+
+    function updateTodayStatus() {
+      const todayStatus = document.getElementById("todayStatus");
+      const todayHint = document.getElementById("todayHint");
+      const today = new Date();
+      const todayKey = formatDateKey(today);
+      const weekend = isWeekend(today);
+      const dayRecord = appState.log[todayKey] || { plants: {} };
+      const status = calcDayStatus(dayRecord);
+
+      todayStatus.classList.remove("done", "partial", "none", "off");
+      let label;
+
+      if (weekend) {
+        todayStatus.classList.add("off");
+        label = "Weekend · no office watering expected";
+        todayHint.textContent = "";
+      } else if (status === "done") {
+        todayStatus.classList.add("done");
+        label = "Today · all plants handled";
+        todayHint.textContent = "Every plant is either watered or checked & skipped. Calendar is green.";
+      } else if (status === "partial") {
+        todayStatus.classList.add("partial");
+        label = "Today · some plants left";
+        todayHint.textContent = "Open today and finish the remaining checklist.";
+      } else {
+        todayStatus.classList.add("none");
+        label = "Today · nothing logged yet";
+        todayHint.textContent =
+          "Use the state selector: 'checked (skip)' if soil is still moist, 'watered' if you actually watered.";
+      }
+
+      todayStatus.innerHTML = `<span class="badge-dot"></span><span>${label}</span>`;
+    }
+
+    // --- KB toggles ---
+
+    function setupKnowledgeBase() {
+      document.querySelectorAll(".kb-header").forEach(h => {
+        const id = h.getAttribute("data-kb-toggle");
+        const body = document.getElementById(id);
+        if (!body) return;
+        h.addEventListener("click", () => {
+          body.classList.toggle("open");
+        });
+      });
+      const gen = document.getElementById("kb-general");
+      if (gen) gen.classList.add("open");
+    }
+
+    // --- Init ---
+
+    function init() {
+      appState = loadState();
+      const today = new Date();
+      currentYear = today.getFullYear();
+      currentMonth = today.getMonth();
+      selectedDateKey = formatDateKey(today);
+
+      document.getElementById("prevMonthBtn").addEventListener("click", () => {
+        if (currentMonth === 0) {
+          currentMonth = 11;
+          currentYear -= 1;
+        } else currentMonth -= 1;
+        renderCalendar();
+        renderChecklist();
+        renderDayLogList();
+        updateTodayStatus();
+      });
+
+      document.getElementById("nextMonthBtn").addEventListener("click", () => {
+        if (currentMonth === 11) {
+          currentMonth = 0;
+          currentYear += 1;
+        } else currentMonth += 1;
+        renderCalendar();
+        renderChecklist();
+        renderDayLogList();
+        updateTodayStatus();
+      });
+
+      setupKnowledgeBase();
+      renderCalendar();
+      renderChecklist();
+      renderDayLogList();
+      updateTodayStatus();
+    }
+
+    init();
+  </script>
+</body>
+</html>
+
+
